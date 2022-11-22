@@ -18,7 +18,7 @@ def on_publish(client, userdata, mid):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-    st.write(msg.payload.decode())
+    st.write(msg.payload.decode('utf-8'))
 
 client = mqtt.Client()
 client.on_connect = on_connect
@@ -27,7 +27,7 @@ client.on_message = on_message
 client.connect("mqtt.eclipseprojects.io", 1883, 60)
 client.subscribe("streamlit")
 
-client.loop_start()
+client.loop_forever()
 
 while True:
     msg = "hello"
