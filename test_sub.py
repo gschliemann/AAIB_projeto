@@ -1,40 +1,44 @@
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
 import streamlit as st
-#from threading import Thread
-#from streamlit.runtime.scriptrunner import get_script_run_ctx
-#from streamlit.runtime.scriptrunner import add_script_run_ctx
-#import time
+import time
 
-# The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code "+str(rc))
     client.subscribe("AAIB/project")
 
-# The callback for when a PUBLISH message is received from the server.
+message="n"
 def on_message(client, userdata, msg):
     print(msg.topic+" "+str(msg.payload))
-    st.write(msg.payload.decode())
-    
-#def target():
-    #st.write("msg.payload.decode()")
-
-#t = Thread(target=target)
-#add_script_run_ctx(t)
-#t.start()
+    message = msg.payload.decode()
+    time.sleep(10)
+    st.write(message)
+    print(message)
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_message = on_message
-
 client.connect("mqtt.eclipseprojects.io", 1883, 60)
 
-# Blocking call that processes network traffic, dispatches callbacks and
-# handles reconnecting.
-# Other loop*() functions are available that give a threaded interface and a
-# manual interface.
-client.loop_forever()
-#client.loop_start()
+st.title("Microphone Audio Recorder")
+st.write(
+    "Metrics on how often Pandas is being downloaded from PyPI (Python's main "
+    "package repository, i.e. where `pip install pandas` downloads the package from)."
+)
+col1, col2 = st.columns(2)
 
-#publish.single("AAIB/project", "boo", hostname="mqtt.eclipseprojects.io")
-#time.sleep(3)
+with col1:
+    if st.button('Record'):
+        st.write('Started recording...')
+
+with col2:
+    if st.button('Gravar'):
+        client.loop_start()
+        time.sleep(5)
+        client.loop_stop()
+        st.write(str(message))
+
+#client.loop_forever()
+#client.loop_start()
+#time.sleep(10)
+#client.loop_stop()

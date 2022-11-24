@@ -14,7 +14,6 @@ def on_publish(client, userdata, msg):
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_publish = on_publish
-
 client.connect("mqtt.eclipseprojects.io", 1883, 60)
 
 publish.single("AAIB/project", "boo", hostname="mqtt.eclipseprojects.io")
