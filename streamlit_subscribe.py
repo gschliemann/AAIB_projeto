@@ -3,6 +3,10 @@ import threading
 from streamlit.runtime.scriptrunner.script_run_context import add_script_run_ctx
 import streamlit as st
 import time
+import numpy as np
+import matplotlib.pyplot as plt
+
+#MQTT configuration
 
 broker = 'mqtt.eclipseprojects.io'
 port = 1883
@@ -22,28 +26,40 @@ def connect_mqtt():
 
 def on_message(client, userdata, msg):
     print('Message received')
-    message = msg.payload.decode()
-    st.write(message)
+    message = msg.payload.decode('latin-1').encode("utf-8")
+    np_message = np.frombuffer(message,dtype=np.int16)
+    #st.pyplot(np_message)
 
 def subscribe():  
     client.subscribe(topic)
-    st.write('teste')
     client.on_message = on_message
     print('Subscribing')
     client.loop_forever()
 
-st.title("Microphone Audio Recorder")
+client = connect_mqtt()
+
+#Streamlit Frontend
+
+st.set_page_config(
+    page_title="Real-Time Data Science Dashboard",
+    page_icon="✅",
+    layout="wide",
+)
+
+st.title("Real-Time Audio Recorder using Paho MQTT")
 st.write(
-    "Metrics on how often Pandas is being downloaded from PyPI (Python's main "
-    "package repository, i.e. where `pip install pandas` downloads the package from)."
+    'This is a project developed for the subject of AIIB at FCT-UNL'
 )
 col1, col2 = st.columns(2)
 
 with col1:
     if st.button('Record'):
         st.write('Started recording...')
-
-st.write('ola')
-
-client = connect_mqtt()
-subscribe()
+        for seconds in range(200):
+            if 'mqttThread' not in st.session_state:
+                st.session_state.mqttThread = threading.Thread(target=subscribe)
+                add_script_run_ctx(st.session_state.mqttThread)
+                st.session_state.mqttThread.start()
+                print('Thread is working')
+    
+            time.sleep(1)
