@@ -25,14 +25,16 @@ def connect_mqtt():
     client.connect(broker, port)
     return client
 
-data = []
+#data = ''
 def on_message(client, userdata, msg):
+    global data
     message = msg.payload.decode('unicode-escape').encode('ISO-8859-1')
     np_message = np.frombuffer(message,dtype=np.float64) 
+    #data.append(np_message.tolist())
+    #data = message
     with placeholder2.container():
         st.write('Started recording...')
         display(np_message)
-        data.append(np_message.tolist())
     
     
 def subscribe():  
