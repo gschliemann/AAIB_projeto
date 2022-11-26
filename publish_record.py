@@ -30,9 +30,9 @@ def publish(msg):
 
 def audio_rec():
     FORMAT = pyaudio.paInt16
-    CHANNELS = 2
+    CHANNELS = 1
     RATE = 44100
-    CHUNK = 1024
+    CHUNK = 1024*8
     RECORD_SECONDS = 5
     WAVE_OUTPUT_FILENAME = "file.wav"
  
@@ -46,6 +46,8 @@ def audio_rec():
  
     for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
         data = np.frombuffer(stream.read(CHUNK),dtype=np.int16)
+        S = np.abs(data.astype('float32'))
+        publish(S.tobytes())
         #np.append(data)
 
     print ("Finished recording")
@@ -55,9 +57,10 @@ def audio_rec():
     stream.stop_stream()
     stream.close()
     audio.terminate()
-    print(data.size)
+    #print(data.size)
+    publish('end'.tobytes())
 
-    S = np.abs(data.astype('float32'))
+    
 
  
     #waveFile = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
@@ -67,10 +70,7 @@ def audio_rec():
     #waveFile.writeframes(b''.join(frames))
     #waveFile.close()
 
-    return S
-
 client = connect_mqtt()    
 
-msgg = audio_rec()
+audio_rec()
 
-publish(msgg.tobytes())
