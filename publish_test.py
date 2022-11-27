@@ -3,6 +3,8 @@ import pyaudio
 import wave
 import numpy as np
 import librosa
+import threading
+import time
 
 broker = 'mqtt.eclipseprojects.io'
 port = 1883
@@ -27,6 +29,15 @@ def publish(msg):
         print(f"Message sent to topic {topic}")
     else:
         print(f"Failed to send message to topic {topic}")
+
+def on_message(client, userdata, msg):
+    if str(msg.payload.decode('latin1')) == 'Start':
+        audio_rec()
+        
+def subscribe():  
+    client.subscribe(topic)
+    client.on_message = on_message
+    client.loop_forever()
 
 def audio_rec():
     FORMAT = pyaudio.paInt16
@@ -60,9 +71,6 @@ def audio_rec():
     #print(data.size)
     #publish('end'.tobytes())
 
-    
-
- 
     #waveFile = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
     #waveFile.setnchannels(CHANNELS)
     #waveFile.setsampwidth(audio.get_sample_size(FORMAT))
@@ -70,7 +78,8 @@ def audio_rec():
     #waveFile.writeframes(b''.join(frames))
     #waveFile.close()
 
-client = connect_mqtt()    
+client = connect_mqtt()  
 
-audio_rec()
-
+sub=threading.Thread(target=subscribe)
+pub=threading.Thread(target=publish, args=(1,))
+sub.start()

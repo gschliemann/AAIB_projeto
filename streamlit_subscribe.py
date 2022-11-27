@@ -25,12 +25,12 @@ def connect_mqtt():
     client.connect(broker, port)
     return client
 
-#data = ''
+data = []
 def on_message(client, userdata, msg):
-    global data
     message = msg.payload.decode('unicode-escape').encode('ISO-8859-1')
     np_message = np.frombuffer(message,dtype=np.float64) 
-    #data.append(np_message.tolist())
+    var = np_message
+    data.append(np_message.tolist())
     #data = message
     with placeholder2.container():
         st.write('Started recording...')
@@ -50,7 +50,7 @@ def display(data):
     plt.close(fig)
 
 def mqtt_thread():
-    for seconds in range(15):
+    for seconds in range(7):
             if 'mqttThread' not in st.session_state:
                 st.session_state.mqttThread = threading.Thread(target=subscribe)
                 add_script_run_ctx(st.session_state.mqttThread)
@@ -61,11 +61,11 @@ def mqtt_thread():
     del st.session_state['mqttThread']
 
 
-def convert_df(data_):
-    with open('shows.csv', 'w') as f:
-        write = csv.writer(f)
-        write.writerows(data_)
-    return f
+#def convert_df(data_):
+    #with open('shows.csv', 'w') as f:
+        #write = csv.writer(f)
+        #write.writerows(data_)
+    #return f
 
 client = connect_mqtt()
 
@@ -84,12 +84,13 @@ with placeholder.container():
 
     with col1:
         if st.button('Record', key='rec'):
+            client.publish(topic,'Start')
             placeholder2 = st.empty()
             mqtt_thread()
 
     with col2:
         if st.button('Download', key='down'):
-            st.write(data)
+            st.write(var)
         #st.download_button(
             #label="Download",
             #data=convert_df(data),
