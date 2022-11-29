@@ -42,8 +42,8 @@ def subscribe():
 def audio_rec():
     FORMAT = pyaudio.paInt16
     CHANNELS = 1
-    RATE = 44100
-    CHUNK = 1024*8
+    RATE = 22050
+    CHUNK = 1024
     RECORD_SECONDS = 5
     WAVE_OUTPUT_FILENAME = "file.wav"
  
@@ -54,20 +54,28 @@ def audio_rec():
                     rate=RATE, input=True,
                     frames_per_buffer=CHUNK)
     print ("Recording...")
- 
+    
+    frames=[]
     for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = np.frombuffer(stream.read(CHUNK),dtype=np.int16)
-        S = np.abs(data.astype('float32'))
-        publish(S.tobytes())
+        #data = stream.read(CHUNK)
+        data = np.frombuffer(stream.read(CHUNK), dtype=np.int16)
+        frames.append(data)
+        #S = np.abs(data.astype('float32'))
+        #publish(S.tobytes())
         #np.append(data)
 
     print ("Finished recording")
- 
- 
+
     # stop Recording
     stream.stop_stream()
     stream.close()
     audio.terminate()
+    #print(frames)
+    y = np.array(frames)
+    print(np.shape(y))
+    S = np.abs(librosa.stft(y.astype('float32'), n_fft=512))
+    print(np.shape(S))
+    publish(str(S.tolist()))
     #print(data.size)
     #publish('end'.tobytes())
 

@@ -6,6 +6,9 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 import csv
+import ast
+import librosa
+import librosa.display
 
 #MQTT configuration
 
@@ -27,14 +30,15 @@ def connect_mqtt():
 
 data = []
 def on_message(client, userdata, msg):
-    message = msg.payload.decode('unicode-escape').encode('ISO-8859-1')
-    np_message = np.frombuffer(message,dtype=np.float64) 
-    var = np_message
-    data.append(np_message.tolist())
-    #data = message
+    #st.write('Finished recording')
+    message = ast.literal_eval(msg.payload.decode())
+    np_message = np.array(message)
+    print(np.shape(np_message))
     with placeholder2.container():
-        st.write('Started recording...')
-        display(np_message)
+        st.write('Finished recording')
+        st.write('Processing...')
+        display(np_message[1])
+        print('pensando')
     
     
 def subscribe():  
@@ -45,12 +49,16 @@ def subscribe():
 
 def display(data):
     fig, ax = plt.subplots()
-    ax.plot(data)
+    y = np.sum(data, axis=0)
+    print(np.shape(data))
+    print(y)
+    print(len(y))
+    ax.plot(y)
     st.pyplot(fig)
-    plt.close(fig)
+
 
 def mqtt_thread():
-    for seconds in range(7):
+    for seconds in range(60):
             if 'mqttThread' not in st.session_state:
                 st.session_state.mqttThread = threading.Thread(target=subscribe)
                 add_script_run_ctx(st.session_state.mqttThread)
@@ -61,13 +69,27 @@ def mqtt_thread():
     del st.session_state['mqttThread']
 
 
-#def convert_df(data_):
-    #with open('shows.csv', 'w') as f:
-        #write = csv.writer(f)
-        #write.writerows(data_)
-    #return f
+def convert_csv(data_):
+    file = open("values.csv")
+    reader = csv.reader(file)
+    #sample = len(list(reader))
+    #sample+=1
+    with open('values.csv', mode='a', newline='') as csv_file:
+        csv_file_writer = csv.writer(csv_file, delimiter= ',')
+        csv_file_writer.writerow(data_)
+
+def headers():
+    try:
+        with open('values.csv', 'r') as csv_file:
+            pass
+    except:       
+         with open('values.csv', mode ='w', newline='') as csv_file:
+            fieldnames = ['sample','valor']
+            writer = csv.DictWriter(csv_file, fieldnames= fieldnames)
+            writer.writeheader()
 
 client = connect_mqtt()
+headers()
 
 #Streamlit Frontend
 
@@ -85,6 +107,7 @@ with placeholder.container():
     with col1:
         if st.button('Record', key='rec'):
             client.publish(topic,'Start')
+            st.write('Started recording...')
             placeholder2 = st.empty()
             mqtt_thread()
 
